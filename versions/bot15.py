@@ -1,0 +1,211 @@
+#with mic properly on evry input - didnt work exaactly
+
+import streamlit as st
+import pandas as pd
+import random
+import time
+import difflib
+import os
+import subprocess
+import io
+import speech_recognition as sr
+from streamlit_mic_recorder import mic_recorder
+
+# Load CSV
+df = pd.read_csv("troubleshooting.csv")
+
+st.title("@createdbyalna")
+
+# Initial welcome
+if "initialized" not in st.session_state:
+    with st.chat_message("assistant"):
+        st.write_stream((word + " " for word in "Hi! I'm Q bot, your personal assistant. I'm here to assist you with any query you have regarding Mispa X.".split()))
+    st.session_state.initialized = True
+
+# Stream messages
+def stream_response(message):
+    for line in message.split("\n"):
+        line = line.strip()
+        if line.startswith("-"):
+            yield "- "
+            for word in line[1:].strip().split():
+                yield word + " "
+                time.sleep(0.05)
+            yield "\n"
+        else:
+            for word in line.split():
+                yield word + " "
+                time.sleep(0.05)
+            yield "\n"
+
+def stream_bot_reply(message):
+    with st.chat_message("assistant"):
+        st.write_stream(stream_response(message))
+    st.session_state.messages.append({"role": "assistant", "content": message})
+
+# Fuzzy matcher
+from difflib import SequenceMatcher
+def best_fuzzy_match(user_input, options, threshold=0.6):
+    user_input = user_input.lower()
+    best_match = None
+    best_score = 0
+    for option in options:
+        ratio = SequenceMatcher(None, user_input, option.lower()).ratio()
+        if ratio > best_score:
+            best_score = ratio
+            best_match = option
+    if best_score >= threshold:
+        return best_match
+    return None
+
+# Session state init
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "stage" not in st.session_state:
+    st.session_state.stage = "start"
+    st.session_state.selected_eq = None
+    st.session_state.selected_error = None
+    st.session_state.selected_desc = None
+
+# Show history
+for message in st.session_state.messages:
+    avatar = "👩‍🦰" if message["role"] == "user" else None
+    with st.chat_message(message["role"], avatar=avatar):
+        st.markdown(message["content"])
+
+# Mic input
+voice_input = mic_recorder(start_prompt="🎙️ Speak now", stop_prompt="⏹️ Stop", just_once=True, key="mic")
+
+# Text input
+text_input = st.chat_input("Type your response...")
+
+# Handle input
+prompt = None
+if voice_input and isinstance(voice_input, dict) and "bytes" in voice_input:
+    try:
+        webm_bytes = voice_input["bytes"]
+        with open("temp_input.webm", "wb") as f:
+            f.write(webm_bytes)
+
+        # Convert to WAV
+        subprocess.run([
+            "ffmpeg", "-y", "-i", "temp_input.webm", "temp_output.wav"
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # Recognize
+        recognizer = sr.Recognizer()
+        with sr.AudioFile("temp_output.wav") as source:
+            audio_data = recognizer.record(source)
+            prompt = recognizer.recognize_google(audio_data)
+
+        os.remove("temp_input.webm")
+        os.remove("temp_output.wav")
+
+    except Exception as e:
+        prompt = f"Voice input error: {str(e)}"
+
+elif text_input:
+    prompt = text_input
+
+# Main logic
+if prompt:
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user", avatar="👩‍🦰"):
+        st.markdown(prompt)
+
+    user_input = prompt.lower().strip()
+
+    if st.session_state.stage == "start":
+        equipment_options = df["Equipment"].unique()
+        st.session_state.equipment_list = list(equipment_options)
+        message = "Which equipment are you having issues with?\n\n" + "\n".join(f"- {e}" for e in equipment_options)
+        stream_bot_reply(message)
+        st.session_state.stage = "equipment"
+
+    elif st.session_state.stage == "equipment":
+        matched_eq = best_fuzzy_match(user_input, st.session_state.equipment_list)
+        if matched_eq:
+            st.session_state.selected_eq = matched_eq
+            error_options = df[df["Equipment"] == matched_eq]["ERROR"].unique()
+            st.session_state.error_list = list(error_options)
+            desc_options = df[df["Equipment"] == matched_eq]["ERROR DESCRIPTION"].unique()
+            st.session_state.desc_list = list(desc_options)
+            stream_bot_reply(f"What issue are you facing with **{matched_eq}**?")
+            st.session_state.stage = "error_or_desc"
+        else:
+            stream_bot_reply(" ** Please mention a valid equipment name like 'Mispa X'. **")
+
+    elif st.session_state.stage == "error_or_desc":
+        combined_list = st.session_state.error_list + st.session_state.desc_list
+        matched_text = best_fuzzy_match(user_input, combined_list)
+
+        if matched_text:
+            if matched_text in st.session_state.error_list:
+                st.session_state.selected_error = matched_text
+                desc_options = df[
+                    (df["Equipment"] == st.session_state.selected_eq) &
+                    (df["ERROR"] == matched_text)
+                ]["ERROR DESCRIPTION"].unique()
+                st.session_state.desc_list = list(desc_options)
+                message = "Can you describe the problem more specifically?\n\n" + "\n".join(f"- {d}" for d in desc_options)
+                stream_bot_reply(message)
+                st.session_state.stage = "desc"
+
+            elif matched_text in st.session_state.desc_list:
+                st.session_state.selected_desc = matched_text
+                matched_error = df[
+                    (df["Equipment"] == st.session_state.selected_eq) &
+                    (df["ERROR DESCRIPTION"] == matched_text)
+                ]["ERROR"].iloc[0]
+                st.session_state.selected_error = matched_error
+                steps = df[
+                    (df["Equipment"] == st.session_state.selected_eq) &
+                    (df["ERROR"] == matched_error) &
+                    (df["ERROR DESCRIPTION"] == matched_text)
+                ]["ACTION POINTS / TROUBLE SHOOTING"].dropna().tolist()
+
+                if not steps:
+                    stream_bot_reply("No troubleshooting steps found.")
+                    st.session_state.stage = "end"
+                else:
+                    stream_bot_reply("Try these steps:\n" + "\n".join(f"- {s}" for s in steps) + "\n\nDid this fix the issue? (yes/no)")
+                    st.session_state.stage = "troubleshoot"
+        else:
+            stream_bot_reply(" ** Please mention a valid issue or error description. **")
+
+    elif st.session_state.stage == "desc":
+        matched_desc = best_fuzzy_match(user_input, st.session_state.desc_list)
+        if matched_desc:
+            st.session_state.selected_desc = matched_desc
+            steps = df[
+                (df["Equipment"] == st.session_state.selected_eq) &
+                (df["ERROR"] == st.session_state.selected_error) &
+                (df["ERROR DESCRIPTION"] == matched_desc)
+            ]["ACTION POINTS / TROUBLE SHOOTING"].dropna().tolist()
+
+            if not steps:
+                stream_bot_reply("No troubleshooting steps found.")
+                st.session_state.stage = "end"
+            else:
+                stream_bot_reply("Try these steps:\n" + "\n".join(f"- {s}" for s in steps) + "\n\nDid this fix the issue? (yes/no)")
+                st.session_state.stage = "troubleshoot"
+        else:
+            stream_bot_reply("** Please describe the issue more clearly. **")
+
+    elif st.session_state.stage == "troubleshoot":
+        if "yes" in user_input:
+            stream_bot_reply("Glad the issue was fixed! Need help with anything else?")
+            st.session_state.stage = "end"
+        elif "no" in user_input:
+            final_solution = df[
+                (df["Equipment"] == st.session_state.selected_eq) &
+                (df["ERROR"] == st.session_state.selected_error) &
+                (df["ERROR DESCRIPTION"] == st.session_state.selected_desc)
+            ]["FINAL SOLUTIONS"].dropna().iloc[0]
+            stream_bot_reply(f"Final Solution: {final_solution}")
+            st.session_state.stage = "end"
+        else:
+            stream_bot_reply("** Please respond with 'yes' or 'no'. **")
+
+    elif st.session_state.stage == "end":
+        stream_bot_reply("If you want to start again, please refresh the page.")

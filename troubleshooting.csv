@@ -1,0 +1,41 @@
+Equipment,ERROR,ERROR DESCRIPTION,ACTION POINTS / TROUBLE SHOOTING,FINAL SOLUTIONS
+Mispa X,Abnormal sound,Abnormal sound from Cuvette Holder,Need to clean cuvette holder.,Need to replace faulty cuvette holder.
+Mispa X,Abnormal sound,Abnormal sound from Cuvette Holder,Need to check cuvette holder is jammed on the motor.,Need to replace faulty cuvette holder.
+Mispa X,Abnormal sound,Abnormal sound from Cuvette Holder,Need to check cuvette holder grub screw loose.,Need to replace faulty cuvette holder.
+Mispa X,Abnormal sound,Abnormal sound from mixing motor,Need to check the  motor mounting screws loose or not.,Need to replace faulty motor
+Mispa X,Abnormal sound,Abnormal sound from mixing motor,Need to check mixing motor connections.,Need to replace faulty motor
+Mispa X,Abnormal sound,Abnormal sound from mixing motor,Need to check all the connections of the boards and reset them.,Need to replace faulty motor
+Mispa X,Abnormal sound,Abnormal sound from Main Board,Need to check the board for any types of short circuit.,Replace the Faulty board 
+Mispa X,Abnormal sound,Abnormal sound from Keypad,Need to check any short circuit on keypad.,Need to change damaged keypad.
+Mispa X,Battery complaint,with mains do not switch on,Check out put voltage of the battery .it should be in between 7.7V to 8.2 V.,Need to replace faulty battery.
+Mispa X,Battery complaint,without mains do not switch on,Need to check battery connectors damaged or not.,Need to fix good connectors properly.
+Mispa X,Battery complaint,without mains do not switch on,Need to check SMPS connections.,Need to fix good connectors properly.
+Mispa X,Card not detecting,IC card not sensing,Need to clean card reader,Need to replace faulty card reader.
+Mispa X,Card not detecting,IC card not sensing,Check for smart card damage/try with another card,Need to replace faulty card.
+Mispa X,Card not detecting,IC card not sensing,Loose contact might be in Card holder,Need to fix card holder properly.
+Mispa X,Card not detecting,IC card not sensing,"Need to check the black connector on card reader, pin no 4 and 1 is giving continuity after inserting the card.",If it is not coming continuity change faulty card reader.
+Mispa X,Card not detecting,IC card not sensing, Check the customer is inserting card properly or not.,Train the technician well
+Mispa X,Card not detecting,Main board issue,"Need to check voltage of pin no 10 and 1 of J6 connector, it should be 5V.",Need to change main board IF 5V is not getting .
+Mispa X,Cuvette Mixer Not working,Mixer Motor stuck,Remove and clean motor and reinsert properly.,Need to replace faulty spare.
+Mispa X,Cuvette Mixer Not working,Mother board issue,Check the J7 connector voltage in the main board (it should be 5V),Need to change main board IF 5V is not getting .
+Mispa X,Cuvette Mixer Not working,Motor not working,Need to check resistance and continuity of DC motor.,Need to replace faulty item.
+Mispa X,Cuvette Mixer Not working,cuvette mound not rotating.,Need to check cuvette mount grub screw loose.,Need to fix cuvette mount properly or replace faulty item
+Mispa X,Cuvette Mixer Not working,Cuvette mount holder jammed,Properly align the base in the middle of the cuvette well,Need to fix cuvette mount properly or replace faulty item
+Mispa X,Cuvette Mixer Not working,Cuvette Holder stuck,Check if any deposits in the holder,Need to clean cuvette holder and refix it.
+Mispa X,Cuvette Mixer Not working,calibration card ,Check the calibration card data print out (raw data) and change the card if data is corrupted,Need to replace faulty card.
+Mispa X,Date and time error,CMOS battery issue,Check the dc voltage of CMOS BATTERY ,Need to replace faulty CMOS battery.
+Mispa X,Date and time error,CMOS battery socket in the main board damaged ,Check for socket status of CMOS battery in main board/ check for any dry soldering issue.,Need to replace faulty main board.
+Mispa X,Display not working properly,FRC cable malfunction/Loose contact,Need to Reconnect FRC cable.,Need to replace faulty FRC cable
+Mispa X,Display not working properly,FRC cable malfunction/Loose contact,Check weather FRC cable connected properly,Need to replace faulty FRC cable
+Mispa X,Display not working properly,Main board issue,Need to check any physical damage on main board.,Replace faulty main board.
+Mispa X,Display not working properly,Display board issue,Need to check display board.,Replace faulty display board.
+Mispa X,Display not working properly,Display shows lines,Need to remove printer connections. then check display working or not.,If the issue is solved need to replace faulty printer.
+Mispa X,Incubation period low,Smart card programming error,Need to check with another smart card.,Need to replace faulty card.
+Mispa X,Instrument is not powering on,Fuse Damaged,Need to check continuity of fuse.,Need to replace faulty fuse.
+Mispa X,Instrument is not powering on,Power chord damage,Need to check power chord with multimeter.,Need to replace faulty power chord.
+Mispa X,Instrument is not powering on,Power switch might be faulty,Need to check Power switch.,Replace faulty power switch.
+Mispa X,Instrument is not powering on,Having issue in SMPS,Need to Check output the voltage of SMPS (12V).,Need to replace faulty SMPS.
+Mispa X,Instrument is not powering on,Having problem in main board,Need to check main board. ,Need to replace faulty main board.
+Mispa X,Keypad not working,keypad Cable issue,Need to check old model equipment keypad power button.,Need to replace faulty keypad.
+Mispa X,Keypad not working,Keypad Cable issue,Need to reconnect keypad flexible cable.,Need to replace faulty keypad.
+Mispa X,Keypad not working,Keypad Cable issue,Need to check main FRC/ keypad cable damaged or not.,Need to replace faulty keypad.
