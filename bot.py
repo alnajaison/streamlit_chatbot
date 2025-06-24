@@ -126,7 +126,7 @@ if prompt:
             stream_bot_reply(f"What issue are you facing with **{eq}**?")
             st.session_state.stage = "issue"
         else:
-            stream_bot_reply("🤔 I didn’t get you. Please mention a valid equipment name.")
+            stream_bot_reply("** I didn’t get you. Please mention a valid equipment name. **")
 
     elif st.session_state.stage == "issue":
         err_match = best_match(user_input, st.session_state.error_list)
@@ -153,10 +153,10 @@ if prompt:
                 stream_bot_reply(message)
                 st.session_state.stage = "troubleshoot"
             else:
-                stream_bot_reply("❌ No troubleshooting steps found.")
+                stream_bot_reply(" No troubleshooting steps found.")
                 st.session_state.stage = "end"
         else:
-            stream_bot_reply("🤔 I didn’t get you. Please describe the issue more clearly.")
+            stream_bot_reply("** I didn’t get you. Please describe the issue more clearly. **")
 
     elif st.session_state.stage == "desc":
         desc = best_match(user_input, st.session_state.desc_list)
@@ -170,10 +170,10 @@ if prompt:
                 stream_bot_reply(message)
                 st.session_state.stage = "troubleshoot"
             else:
-                stream_bot_reply("❌ No troubleshooting steps found.")
+                stream_bot_reply(" No troubleshooting steps found.")
                 st.session_state.stage = "end"
         else:
-            stream_bot_reply("🤔 I didn’t get you. Please select a valid issue description.")
+            stream_bot_reply("** I didn’t get you. Please select a valid issue description. **")
 
     elif st.session_state.stage == "troubleshoot":
         if "yes" in user_input:
@@ -183,7 +183,7 @@ if prompt:
             sol = df[(df["Equipment"] == st.session_state.selected_eq) &
                      (df["ERROR"] == st.session_state.selected_error) &
                      (df["ERROR DESCRIPTION"] == st.session_state.selected_desc)]["FINAL SOLUTIONS"].dropna().iloc[0]
-            stream_bot_reply(f"💡 Final Solution:\n{sol}")
+            stream_bot_reply(f" Final Solution:\n{sol}")
             st.session_state.stage = "end"
         else:
             stream_bot_reply("Please reply with 'yes' or 'no'.")
