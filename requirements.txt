@@ -2,4 +2,3 @@ streamlit
 pandas
 speechrecognition
 streamlit-mic-recorder
-ffmpeg-python
