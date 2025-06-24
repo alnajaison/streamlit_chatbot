@@ -1,4 +1,5 @@
-#17
+#to prevent your chatbot from responding to irrelevant or unrelated input
+#18
 
 import streamlit as st
 import pandas as pd
@@ -23,7 +24,6 @@ if "initialized" not in st.session_state:
     st.session_state.selected_eq = None
     st.session_state.selected_error = None
     st.session_state.selected_desc = None
-
 
 # Show message history
 for msg in st.session_state.messages:
@@ -52,10 +52,18 @@ def stream_bot_reply(message):
         st.write_stream(stream_response(message))
     st.session_state.messages.append({"role": "assistant", "content": message})
 
-def best_match(user_input, options):
-    return max(options, key=lambda x: SequenceMatcher(None, user_input.lower(), str(x).lower()).ratio(), default=None)
+# Similarity match with threshold
+def best_match(user_input, options, threshold=0.5):
+    best = None
+    best_score = 0
+    for opt in options:
+        score = SequenceMatcher(None, user_input.lower(), str(opt).lower()).ratio()
+        if score > best_score:
+            best = opt
+            best_score = score
+    return best if best_score >= threshold else None
 
-# Mic widget always on bottom (new key each time)
+# Mic input
 mic_key = f"mic_{len(st.session_state.messages)}"
 voice_input = mic_recorder(start_prompt="🎙️ Speak", stop_prompt="🛑 Stop", just_once=True, key=mic_key)
 text_input = st.chat_input("Type your message...")
@@ -69,11 +77,9 @@ if voice_input and isinstance(voice_input, dict) and "bytes" in voice_input:
             f.write(voice_input["bytes"])
         subprocess.run(["ffmpeg", "-y", "-i", "temp.webm", "temp.wav"],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
         recognizer = sr.Recognizer()
         with sr.AudioFile("temp.wav") as source:
             audio = recognizer.record(source)
-
         try:
             prompt = recognizer.recognize_google(audio)
             if not prompt.strip():
@@ -84,10 +90,8 @@ if voice_input and isinstance(voice_input, dict) and "bytes" in voice_input:
         except sr.RequestError as e:
             st.error(f"🎤 Speech API error: {e}")
             prompt = None
-
         os.remove("temp.webm")
         os.remove("temp.wav")
-
     except Exception as e:
         st.error(f"🎤 Voice processing failed: {e}")
         prompt = None
@@ -98,7 +102,7 @@ if voice_input and isinstance(voice_input, dict) and "bytes" in voice_input:
 if text_input:
     prompt = text_input
 
-# Process input if available
+# Process input
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👩‍🦰"):
@@ -122,7 +126,7 @@ if prompt:
             stream_bot_reply(f"What issue are you facing with **{eq}**?")
             st.session_state.stage = "issue"
         else:
-            stream_bot_reply("❗ Please mention a valid equipment name.")
+            stream_bot_reply("🤔 I didn’t get you. Please mention a valid equipment name.")
 
     elif st.session_state.stage == "issue":
         err_match = best_match(user_input, st.session_state.error_list)
@@ -130,14 +134,16 @@ if prompt:
 
         if err_match:
             st.session_state.selected_error = err_match
-            descs = df[(df["Equipment"] == st.session_state.selected_eq) & (df["ERROR"] == err_match)]["ERROR DESCRIPTION"].dropna().unique()
+            descs = df[(df["Equipment"] == st.session_state.selected_eq) &
+                       (df["ERROR"] == err_match)]["ERROR DESCRIPTION"].dropna().unique()
             st.session_state.desc_list = descs
             message = "Please describe the issue in more detail:\n" + "\n".join(f"- {d}" for d in descs)
             stream_bot_reply(message)
             st.session_state.stage = "desc"
         elif desc_match:
             st.session_state.selected_desc = desc_match
-            err = df[(df["Equipment"] == st.session_state.selected_eq) & (df["ERROR DESCRIPTION"] == desc_match)]["ERROR"].iloc[0]
+            err = df[(df["Equipment"] == st.session_state.selected_eq) &
+                     (df["ERROR DESCRIPTION"] == desc_match)]["ERROR"].iloc[0]
             st.session_state.selected_error = err
             steps = df[(df["Equipment"] == st.session_state.selected_eq) &
                        (df["ERROR"] == err) &
@@ -150,7 +156,7 @@ if prompt:
                 stream_bot_reply("❌ No troubleshooting steps found.")
                 st.session_state.stage = "end"
         else:
-            stream_bot_reply("❗ Please provide a valid error or description.")
+            stream_bot_reply("🤔 I didn’t get you. Please describe the issue more clearly.")
 
     elif st.session_state.stage == "desc":
         desc = best_match(user_input, st.session_state.desc_list)
@@ -167,7 +173,7 @@ if prompt:
                 stream_bot_reply("❌ No troubleshooting steps found.")
                 st.session_state.stage = "end"
         else:
-            stream_bot_reply("❗ Please select a valid issue description.")
+            stream_bot_reply("🤔 I didn’t get you. Please select a valid issue description.")
 
     elif st.session_state.stage == "troubleshoot":
         if "yes" in user_input:
